@@ -6,4 +6,5 @@ class BTCPSocket:
     # Return the Internet checksum of data
     @staticmethod
     def in_cksum(data):
+
         pass
