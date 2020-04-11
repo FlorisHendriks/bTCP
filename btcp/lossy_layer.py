@@ -4,7 +4,7 @@ import threading
 from btcp.constants import *
 
 # Continuously read from the socket and whenever a segment arrives, 
-# call the lossy_layer_input method of the associated socket. 
+# call the lossy_layer_input method of the associated socket.
 # When flagged, return from the function.
 def handle_incoming_segments(bTCP_sock, event, udp_sock):
     while not event.is_set():

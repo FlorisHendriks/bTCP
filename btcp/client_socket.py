@@ -10,6 +10,7 @@ class BTCPClientSocket(BTCPSocket):
         self._lossy_layer = LossyLayer(self, CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
         self.timeout = timeout
         self.window = window
+        self.CLIENT_IP = CLIENT_IP
 
     # Called by the lossy layer from another thread whenever a segment arrives. 
     def lossy_layer_input(self, segment):
