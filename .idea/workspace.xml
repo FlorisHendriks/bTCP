@@ -3,8 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="87c6fa3f-7ad5-484a-8cc6-1e78368e5244" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/btcp/btcp_socket.py" beforeDir="false" afterPath="$PROJECT_DIR$/btcp/btcp_socket.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/client_app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/btcp/client_socket.py" beforeDir="false" afterPath="$PROJECT_DIR$/btcp/client_socket.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
