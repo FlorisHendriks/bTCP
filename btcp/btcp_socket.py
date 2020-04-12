@@ -7,9 +7,8 @@ class BTCPSocket:
     @staticmethod
     def in_cksum(packet_bytes):
         checksum = 0
-        for i in range(0, len(packet_bytes), 2):
-            byte = packet_bytes[i] << 8 + packet_bytes[i + 1] >> 8
-            checksum += byte
+        byte = packet_bytes[0] + packet_bytes[i + 1] >> 8
+        checksum += byte
 
         checksum = checksum + (checksum >> 16)
         checksum = ~checksum & 0xffff
