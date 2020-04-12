@@ -29,6 +29,7 @@ class BTCPClientSocket(BTCPSocket):
         print(syn_number)
         print("{0:016b}".format(syn_number))
         ack_number = 0
+        print("{0:016b}".format(ack_number))
         data_length = 0
         syn = 0
         ack = 0
