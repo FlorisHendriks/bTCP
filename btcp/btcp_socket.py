@@ -14,8 +14,8 @@ class BTCPSocket:
         byte.append(packet_bytes[2] + (packet_bytes[3] << 8))
         byte.append(packet_bytes[4] & 0xffff)
         byte.append(packet_bytes[5] & 0xffff)
-        print(packet_bytes[5])
-        byte.append(packet_bytes[6] + (packet_bytes[7] << 8))
+        for i in range(6, len(packet_bytes), 2):
+            byte.append(packet_bytes[i] + (packet_bytes[i+1] << 8))
         for i in range(0, len(byte)):
             temp = checksum + byte[i]
             checksum = (temp & 0xffff) + (temp >> 16)
