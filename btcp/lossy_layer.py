@@ -25,7 +25,7 @@ class LossyLayer:
         self._b_port = b_port
         self._udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #self._udp_sock.bind((a_ip, a_port))
+        self._udp_sock.bind((a_ip, a_port))
         self._event = threading.Event()
         self._thread = threading.Thread(target=handle_incoming_segments, args=(self._bTCP_sock, self._event, self._udp_sock))
         self._thread.start()
@@ -38,4 +38,4 @@ class LossyLayer:
 
     # Put the segment into the network
     def send_segment(self, segment):
-        self._udp_sock.sendto(segment, (self.b_ip, self.b_port))
+        self._udp_sock.sendto(segment, (self._b_ip, self._b_port))

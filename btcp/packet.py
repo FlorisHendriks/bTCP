@@ -18,15 +18,23 @@ class Header:
         Flag = Flags.int_to_flag(FlagInt)
         return Header(Syn_number, Ack_number, Flag, Window, Data_length, Checksum)
 
+    def getSynNumber(self):
+        return self._Syn_number
+
+    def getAckNumber(self):
+        return self._Ack_number
+
+    def getFlags(self):
+        return self._Flags
+
+    def getWindow(self):
+        return self._Window
+
     def getChecksum(self):
         return self._Checksum
-    @property
-    def Data_length(self):
+
+    def getDatalength(self):
         return self._Data_length
-
-    def changeChecksum(self, checksum):
-        self._Checksum = checksum
-
 
     def __str__(self):
         return "Sequence number: " + str(self._Syn_number) + "\n" \
@@ -36,6 +44,11 @@ class Header:
                + "Data length: " + str(self._Data_length) + "\n" \
                + "Checksum: " + str(self._Checksum)
 
+    def changeChecksum(self, checksum):
+        self._Checksum = checksum
+
+    def changeDataLength(self, DataLength):
+        self._Data_length = DataLength
 
 class Packet:
     def __init__(self, header, data):
@@ -44,16 +57,26 @@ class Packet:
         self._padding = bytes(1008 - len(self._payload))
 
     def pack_packet(self):
+        self._header.changeDataLength(len(self._payload))
         packet_bytes = self._header.pack_header() + self._payload + self._padding
         checksum = BTCPSocket.in_cksum(packet_bytes)
+        print(checksum)
         self._header.changeChecksum(checksum)
         return self._header.pack_header() + self._payload + self._padding
 
-    def unpack_packet(self, packed_packet):
+    def unpack_packet(packed_packet):
         header = Header.unpack_header(packed_packet[:10])
 
-        return Packet(header, packed_packet[10:header.Data_length + 10])
+        return Packet(header, packed_packet[10:header.getDatalength() + 10].decode())
 
+    def getHeader(self):
+        return self._header
+
+    def getPayload(self):
+        return self._payload
+
+    def getPadding(self):
+        return self._padding
 
     def __str__(self):
         return "Header: " + str(self._header) + "\n" + "Payload: " + self._payload.decode()

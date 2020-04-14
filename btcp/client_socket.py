@@ -15,37 +15,42 @@ class BTCPClientSocket(BTCPSocket):
     def __init__(self, window, timeout):
         super().__init__(window, timeout)
         self._lossy_layer = LossyLayer(self, CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
-        self._tcp_sock = socket.socket(socket.AF_INET,
-                                       socket.SOCK_DGRAM)  # We use the underscore to hint that the variable is used for internal use
-        self._tcp_sock.bind((CLIENT_IP, CLIENT_PORT))
-        self._tcp_sock.settimeout(timeout)
-        self._server_address = (SERVER_IP, SERVER_PORT)
+        #self._tcp_sock = socket.socket(socket.AF_INET,
+                                       #socket.SOCK_DGRAM)  # We use the underscore to hint that the variable is used for internal use
+        #self._tcp_sock.bind((CLIENT_IP, CLIENT_PORT))
+        #self._tcp_sock.settimeout(timeout)
+        #self._server_address = (SERVER_IP, SERVER_PORT)
+        self._HandshakeSuccessful = False
+        self._ReceivedPacket = None
 
     # Called by the lossy layer from another thread whenever a segment arrives. 
     def lossy_layer_input(self, segment):
-        pass
+        self._ReceivedPacket = segment
 
     # Perform a three-way handshake to establish a connection
     def connect(self):
-
-        flags = Flags(1,0,0)
-        header = Header(random.getrandbits(16), 0, flags, self._window, 0, 0)
-        Syn_packet = Packet(header, "test")
-        packet_bytes = Syn_packet.pack_packet()
-        print(str(Syn_packet))
-        self._tcp_sock.sendto(packet_bytes, self._server_address)
-        Server_bytes, address = self._tcp_sock.recvfrom(1018)
-        if self.CheckChecksum(self, Server_bytes):
-            print("dab")
-        else:
-            print("MonkaS")
-        SynAck_packet = Packet.unpack_packet(Server_bytes)
-
-
-
-
-
-        pass
+        while not self._HandshakeSuccessful:
+            try:
+                header = Header(random.getrandbits(16), 0, Flags(1,0,0), self._window, 0, 0)
+                Syn_packet = Packet(header, "test")
+                packet_bytes = Syn_packet.pack_packet()
+                print(str(Syn_packet))
+                self._lossy_layer.send_segment(packet_bytes)
+                Syn_Ack_Packet = Packet.unpack_packet(self._ReceivedPacket)
+                Syn_number = Syn_Ack_Packet.getHeader().getAckNumber() + 1
+                Ack_number = Syn_Ack_Packet.getHeader().getSynNumber() + 1
+                if self.CheckChecksum(self._ReceivedPacket):
+                    print("test")
+                    Ack_header = Header(Syn_number, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
+                    Ack_packet = Packet(Ack_header, "testtest")
+                    Ack_packetBytes = Ack_packet.pack_packet()
+                    self._lossy_layer.send_segment(Ack_packetBytes)
+                    self._HandshakeSuccessful = True
+                else:
+                    print("MonkaS")
+            except socket.timeout:
+                print("socket timeout")
+                pass
 
     def flags_to_int(self, syn, ack, fin):
         flagBitstring = "{0:0b}".format(syn)
