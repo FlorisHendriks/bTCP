@@ -14,6 +14,7 @@ class Header:
         return struct.pack('HHBBHH', self._Syn_number, self._Ack_number, self._Flags.flag_to_int(), self._Window, self._Data_length, self._Checksum)
 
     def unpack_header(packed_header):
+        print(packed_header)
         Syn_number, Ack_number, FlagInt, Window, Data_length, Checksum = struct.unpack('HHBBHH', packed_header)
         Flag = Flags.int_to_flag(FlagInt)
         return Header(Syn_number, Ack_number, Flag, Window, Data_length, Checksum)

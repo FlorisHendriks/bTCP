@@ -23,3 +23,9 @@ class BTCPSocket:
         checksum = ~checksum & 0xffff
         print("{0:016b}".format(checksum))
         return checksum
+
+    def CheckChecksum(packet):
+        if int(BTCPSocket.in_cksum(packet)) == 0:
+            return True
+        else:
+            return False
