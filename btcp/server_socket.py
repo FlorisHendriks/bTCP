@@ -25,7 +25,9 @@ class BTCPServerSocket(BTCPSocket):
 
     # Wait for the client to initiate a three-way handshake
     def accept(self):
-        Syn_Ack_packet_bytes, address = self._ReceivedPacket
+        while self._ReceivedPacket is None:
+            pass
+        Syn_Ack_packet_bytes = self._ReceivedPacket
         flags = Flags(1,1,0)
         print(Syn_Ack_packet_bytes)
         packet = Packet.unpack_packet(Syn_Ack_packet_bytes)
@@ -37,6 +39,7 @@ class BTCPServerSocket(BTCPSocket):
         AckPacket_bytes = self._ReceivedPacket
         print(AckPacket_bytes)
         print(Packet.unpack_packet(AckPacket_bytes))
+        self._lossy_layer.destroy()
         pass
 
     # Send any incoming data to the application layer

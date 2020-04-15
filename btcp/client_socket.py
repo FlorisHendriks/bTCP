@@ -46,6 +46,7 @@ class BTCPClientSocket(BTCPSocket):
                     Ack_packetBytes = Ack_packet.pack_packet()
                     self._lossy_layer.send_segment(Ack_packetBytes)
                     self._HandshakeSuccessful = True
+                    self._lossy_layer.destroy()
                 else:
                     print("MonkaS")
             except socket.timeout:
