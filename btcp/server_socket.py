@@ -42,6 +42,13 @@ class BTCPServerSocket(BTCPSocket):
         self._lossy_layer.destroy()
         pass
 
+    def wait_for_packet(self):
+        while self._ReceivedPacket is None:
+            time.sleep(self._timeout)
+        if self._ReceivedPacket is not None:
+            pass
+        else:
+            self.wait_for_packet()
     # Send any incoming data to the application layer
     def recv(self):
         pass

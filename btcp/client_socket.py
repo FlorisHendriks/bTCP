@@ -4,6 +4,7 @@ from btcp.lossy_layer import LossyLayer
 from btcp.packet import *
 import socket
 import random
+import time
 import struct
 
 
@@ -22,6 +23,7 @@ class BTCPClientSocket(BTCPSocket):
         #self._server_address = (SERVER_IP, SERVER_PORT)
         self._HandshakeSuccessful = False
         self._ReceivedPacket = None
+        self._timeout = timeout
 
     # Called by the lossy layer from another thread whenever a segment arrives. 
     def lossy_layer_input(self, segment):
@@ -36,6 +38,7 @@ class BTCPClientSocket(BTCPSocket):
                 packet_bytes = Syn_packet.pack_packet()
                 print(str(Syn_packet))
                 self._lossy_layer.send_segment(packet_bytes)
+                self.wait_for_packet()
                 Syn_Ack_Packet = Packet.unpack_packet(self._ReceivedPacket)
                 Syn_number = Syn_Ack_Packet.getHeader().getAckNumber() + 1
                 Ack_number = Syn_Ack_Packet.getHeader().getSynNumber() + 1
@@ -65,6 +68,14 @@ class BTCPClientSocket(BTCPSocket):
             return True
         else:
             return False
+
+    def wait_for_packet(self):
+        while self._ReceivedPacket is None:
+            time.sleep(self._timeout)
+        if self._ReceivedPacket is not None:
+            pass
+        else:
+            self.wait_for_packet()
 
     # Send data originating from the application in a reliable way to the server
     def send(self, data):
