@@ -32,26 +32,29 @@ class BTCPServerSocket(BTCPSocket):
 
     # Wait for the client to initiate a three-way handshake
     def accept(self):
-        self.wait_for_packet()
-        print("test")
-        Syn_packet_bytes = self._ReceivedPacket
-        if self._btcpsocket.CheckChecksum(Syn_packet_bytes):
-            flags = Flags(1,1,0)
-            print(Syn_packet_bytes)
-            Syn_packet = Packet.unpack_packet(Syn_packet_bytes)
-            print(Syn_packet.getHeader().getSynNumber())
-            ack_number = Syn_packet.getHeader().getSynNumber() + 1
-            header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
-            Syn_Ack_packet = Packet(header, "syn_ack")
-            self._ReceivedPacket = None
-            self._lossy_layer.send_segment(Syn_Ack_packet.pack_packet())
+        self._ReceivedPacket = None
+        while not self._HandshakeSuccessful:
             self.wait_for_packet()
-            Ack_packet_bytes = self._ReceivedPacket
-            print(Ack_packet_bytes)
-            print(Packet.unpack_packet(Ack_packet_bytes))
-            self._HandshakeSuccessful = True
-            print("Handshake succesful")
-        pass
+            print("test")
+            Syn_packet_bytes = self._ReceivedPacket
+
+            if self._btcpsocket.CheckChecksum(Syn_packet_bytes):
+                flags = Flags(1,1,0)
+                print(Syn_packet_bytes)
+                Syn_packet = Packet.unpack_packet(Syn_packet_bytes)
+                print(Syn_packet.getHeader().getSynNumber())
+                ack_number = Syn_packet.getHeader().getSynNumber() + 1
+                header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
+                Syn_Ack_packet = Packet(header, "syn_ack")
+                self._ReceivedPacket = None
+                self._lossy_layer.send_segment(Syn_Ack_packet.pack_packet())
+                self.wait_for_packet()
+                Ack_packet_bytes = self._ReceivedPacket
+                if self._btcpsocket.CheckChecksum(Ack_packet_bytes):
+                    print(Ack_packet_bytes)
+                    print(Packet.unpack_packet(Ack_packet_bytes))
+                    self._HandshakeSuccessful = True
+                    print("Handshake succesful")
 
     def wait_for_packet(self):
         while self._ReceivedPacket is None:

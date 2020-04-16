@@ -5,9 +5,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/btcp/client_socket.py" beforeDir="false" afterPath="$PROJECT_DIR$/btcp/client_socket.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/btcp/server_socket.py" beforeDir="false" afterPath="$PROJECT_DIR$/btcp/server_socket.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/client_app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input.file" beforeDir="false" afterPath="$PROJECT_DIR$/input.file" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/server_app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testframework.py" beforeDir="false" afterPath="$PROJECT_DIR$/testframework.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

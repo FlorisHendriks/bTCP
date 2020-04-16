@@ -38,6 +38,7 @@ class BTCPClientSocket(BTCPSocket):
     # Perform a three-way handshake to establish a connection
     def connect(self):
         while not self._HandshakeSuccessful:
+            self._ReceivedPacket = None
             try:
                 header = Header(random.getrandbits(15) & 0xffff, 0, Flags(1,0,0), self._window, 0, 0) #We use 15 bits instead of 16 because there are cases that random.getrandbits() returns a large integer that will overflow the 16 bit length when we add sequence numbers to it and eventually results in an error (struct.error: ushort format requires 0 <= number <= 0xffff)
                 Syn_packet = Packet(header, "syn")
@@ -59,7 +60,7 @@ class BTCPClientSocket(BTCPSocket):
                     self._HandshakeSuccessful = True
                     print("handshake succesful")
                 else:
-                    print("MonkaS")
+                    print("Retry Handshake")
             except socket.timeout:
                 print("socket timeout")
                 pass

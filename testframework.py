@@ -61,6 +61,7 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_add)
         
         # launch localhost server
+
         self.server = BTCPServerSocket(winsize, timeout)
 
     def tearDown(self):
