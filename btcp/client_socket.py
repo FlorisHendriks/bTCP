@@ -45,22 +45,22 @@ class BTCPClientSocket(BTCPSocket):
                 Syn_packet_bytes = Syn_packet.pack_packet()
                 print(str(Syn_packet))
                 self._lossy_layer.send_segment(Syn_packet_bytes)
-                self.wait_for_packet()
-                Syn_Ack_Packet_bytes = self._ReceivedPacket
-                Syn_Ack_Packet = Packet.unpack_packet(Syn_Ack_Packet_bytes)
-                print(Syn_Ack_Packet)
-                self._First_Packet_Sequence_Number = Syn_Ack_Packet.getHeader().getAckNumber() + 1
-                Ack_number = Syn_Ack_Packet.getHeader().getSynNumber() + 1
-                if self._btcpsocket.CheckChecksum(Syn_Ack_Packet_bytes):
-                    print("test")
-                    Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
-                    Ack_packet = Packet(Ack_header, "ack")
-                    Ack_packetBytes = Ack_packet.pack_packet()
-                    self._lossy_layer.send_segment(Ack_packetBytes)
-                    self._HandshakeSuccessful = True
-                    print("handshake succesful")
-                else:
-                    print("Retry Handshake")
+                if self.wait_for_packet():
+                    Syn_Ack_Packet_bytes = self._ReceivedPacket
+                    Syn_Ack_Packet = Packet.unpack_packet(Syn_Ack_Packet_bytes)
+                    print(Syn_Ack_Packet)
+                    self._First_Packet_Sequence_Number = Syn_Ack_Packet.getHeader().getAckNumber() + 1
+                    Ack_number = Syn_Ack_Packet.getHeader().getSynNumber() + 1
+                    if self._btcpsocket.CheckChecksum(Syn_Ack_Packet_bytes):
+                        print("test")
+                        Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
+                        Ack_packet = Packet(Ack_header, "ack")
+                        Ack_packetBytes = Ack_packet.pack_packet()
+                        self._lossy_layer.send_segment(Ack_packetBytes)
+                        self._HandshakeSuccessful = True
+                        print("handshake succesful")
+                    else:
+                        print("Retry Handshake")
             except socket.timeout:
                 print("socket timeout")
                 pass
@@ -73,16 +73,18 @@ class BTCPClientSocket(BTCPSocket):
         return int(flagBitstring, 2)
 
     def wait_for_packet(self):
-        while self._ReceivedPacket is None:
-            time.sleep(self._timeout*0.001)
-        if self._ReceivedPacket is not None:
-            pass
+        timeNow = time.time()
+        while self._ReceivedPacket is None and time.time() < timeNow + self._timeout * 0.001:
+            time.sleep(0.001)
+        if self._ReceivedPacket is None:
+            return False
         else:
-            self.wait_for_packet()
+            return True
 
     # Send data originating from the application in a reliable way to the server
     def send(self, data):
         print(type(data))
+        print("datatest")
         packets = []
         content = open(data).read()
         sequence_number_updated = self._First_Packet_Sequence_Number
@@ -121,22 +123,23 @@ class BTCPClientSocket(BTCPSocket):
                 Fin_packet_bytes = Fin_packet.pack_packet()
                 print(str(Fin_packet))
                 self._lossy_layer.send_segment(Fin_packet_bytes)
-                self.wait_for_packet()
-                Fin_Ack_Packet_bytes = self._ReceivedPacket
-                Fin_Ack_Packet = Packet.unpack_packet(Fin_Ack_Packet_bytes)
-                print(Fin_Ack_Packet)
-                Ack_number = Fin_Ack_Packet.getHeader().getSynNumber() + 1
-                if self._btcpsocket.CheckChecksum(Fin_Ack_Packet_bytes):
-                    print("test")
-                    Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
-                    Ack_packet = Packet(Ack_header, "ack")
-                    Ack_packet_bytes = Ack_packet.pack_packet()
-                    self._lossy_layer.send_segment(Ack_packet_bytes)
-                    self._Disconnected = True
-                    print("disconnection succesful")
+                if self.wait_for_packet():
+                    if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 3:
+                        Fin_Ack_Packet_bytes = self._ReceivedPacket
+                        Fin_Ack_Packet = Packet.unpack_packet(Fin_Ack_Packet_bytes)
+                        print(Fin_Ack_Packet)
+                        Ack_number = Fin_Ack_Packet.getHeader().getSynNumber() + 1
+                        if self._btcpsocket.CheckChecksum(Fin_Ack_Packet_bytes):
+                            print("test")
+                            Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
+                            Ack_packet = Packet(Ack_header, "ack")
+                            Ack_packet_bytes = Ack_packet.pack_packet()
+                            self._lossy_layer.send_segment(Ack_packet_bytes)
+                            self._Disconnected = True
+                            print("disconnection succesful")
 
-                else:
-                    print("MonkaS")
+                        else:
+                            print("MonkaS")
             except socket.timeout:
                 print("socket timeout")
                 pass

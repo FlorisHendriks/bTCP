@@ -34,36 +34,37 @@ class BTCPServerSocket(BTCPSocket):
     def accept(self):
         self._ReceivedPacket = None
         while not self._HandshakeSuccessful:
-            self.wait_for_packet()
-            print("test")
-            Syn_packet_bytes = self._ReceivedPacket
-
-            if self._btcpsocket.CheckChecksum(Syn_packet_bytes):
-                flags = Flags(1,1,0)
-                print(Syn_packet_bytes)
-                Syn_packet = Packet.unpack_packet(Syn_packet_bytes)
-                print(Syn_packet.getHeader().getSynNumber())
-                ack_number = Syn_packet.getHeader().getSynNumber() + 1
-                header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
-                Syn_Ack_packet = Packet(header, "syn_ack")
-                self._ReceivedPacket = None
-                self._lossy_layer.send_segment(Syn_Ack_packet.pack_packet())
-                self.wait_for_packet()
-                Ack_packet_bytes = self._ReceivedPacket
-                if self._btcpsocket.CheckChecksum(Ack_packet_bytes):
-                    print(Ack_packet_bytes)
-                    print(Packet.unpack_packet(Ack_packet_bytes))
-                    self._HandshakeSuccessful = True
-                    print("Handshake succesful")
+            if self.wait_for_packet():
+                if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 4:
+                    print("test")
+                    Syn_packet_bytes = self._ReceivedPacket
+                    if self._btcpsocket.CheckChecksum(Syn_packet_bytes):
+                        flags = Flags(1,1,0)
+                        print(Syn_packet_bytes)
+                        Syn_packet = Packet.unpack_packet(Syn_packet_bytes)
+                        print(Syn_packet.getHeader().getSynNumber())
+                        ack_number = Syn_packet.getHeader().getSynNumber() + 1
+                        header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
+                        Syn_Ack_packet = Packet(header, "syn_ack")
+                        self._ReceivedPacket = None
+                        self._lossy_layer.send_segment(Syn_Ack_packet.pack_packet())
+                        if self.wait_for_packet():
+                            if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 2:
+                                Ack_packet_bytes = self._ReceivedPacket
+                                if self._btcpsocket.CheckChecksum(Ack_packet_bytes):
+                                    print(Ack_packet_bytes)
+                                    print(Packet.unpack_packet(Ack_packet_bytes))
+                                    self._HandshakeSuccessful = True
+                                    print("Handshake succesful")
 
     def wait_for_packet(self):
-        while self._ReceivedPacket is None:
-            time.sleep(self._timeout*0.001)
-
-        if self._ReceivedPacket is not None:
-            pass
+        timeNow = time.time()
+        while self._ReceivedPacket is None and time.time() < timeNow + self._timeout*0.001:
+            time.sleep(0.001)
+        if self._ReceivedPacket is None:
+            return False
         else:
-            self.wait_for_packet()
+            return True
 
     # Send any incoming data to the application layer
     def recv(self):
@@ -80,27 +81,34 @@ class BTCPServerSocket(BTCPSocket):
     # Clean up any state
     def close(self):
         self._ReceivedPacket = None
-        self.wait_for_packet()
-        print("test")
-        Fin_packet_bytes = self._ReceivedPacket
-        if self._btcpsocket.CheckChecksum(Fin_packet_bytes):
-            flags = Flags(0, 1, 1)
-            print(Fin_packet_bytes)
-            Fin_packet = Packet.unpack_packet(Fin_packet_bytes)
-            print(Fin_packet)
-            print(Fin_packet.getHeader().getSynNumber())
-            ack_number = Fin_packet.getHeader().getSynNumber() + 1
-            header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
-            Fin_Ack_packet = Packet(header, "fin_ack")
-            self._ReceivedPacket = None
-            self._lossy_layer.send_segment(Fin_Ack_packet.pack_packet())
-            self.wait_for_packet()
-            Ack_packet_bytes = self._ReceivedPacket
-            print(Ack_packet_bytes)
-            print(Packet.unpack_packet(Ack_packet_bytes))
-            self._Disconnected = True
-            print("Disconnection succesful")
-            #self._lossy_layer.destroy()
-        pass
+        if self.wait_for_packet():
+            if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 1:
+                Fin_packet_bytes = self._ReceivedPacket
+                if self._btcpsocket.CheckChecksum(Fin_packet_bytes):
+                    flags = Flags(0, 1, 1)
+                    print(Fin_packet_bytes)
+                    Fin_packet = Packet.unpack_packet(Fin_packet_bytes)
+                    print(Fin_packet)
+                    print(Fin_packet.getHeader().getSynNumber())
+                    ack_number = Fin_packet.getHeader().getSynNumber() + 1
+                    header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
+                    Fin_Ack_packet = Packet(header, "fin_ack")
+                    self._ReceivedPacket = None
+                    self._lossy_layer.send_segment(Fin_Ack_packet.pack_packet())
+                    if self.wait_for_packet():
+                        if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 2:
+                            Ack_packet_bytes = self._ReceivedPacket
+                            print(Ack_packet_bytes)
+                            print(Packet.unpack_packet(Ack_packet_bytes))
+                            self._Disconnected = True
+                            print("Disconnection succesful")
+                            #self._lossy_layer.destroy()
 
 
+    def packet_to_file(self, file):
+        content = ""
+        for i in range(2, len(self._PacketList)):
+            content += Packet.unpack_packet(self._PacketList[i]).getPayload().decode()
+
+        f = open(file, 'w')
+        f.write(content)

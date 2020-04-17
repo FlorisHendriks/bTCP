@@ -2,7 +2,7 @@
 
 import argparse
 from btcp.server_socket import BTCPServerSocket
-
+import time
 
 def main():
     parser = argparse.ArgumentParser()
@@ -16,8 +16,10 @@ def main():
     s.accept()
     # TODO Write your file transfer server code here using your BTCPServerSocket's accept, and recv methods.
     s.recv()
+    s.packet_to_file(args.output)
     # Clean up any state
     s.close()
+
 
 
 main()

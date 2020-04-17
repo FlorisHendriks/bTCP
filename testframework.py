@@ -5,10 +5,13 @@ import sys
 import threading
 from btcp.packet import *
 from btcp.btcp_socket import *
-from client_app import *
-from server_app import *
+import client_app
+import server_app
 from btcp.client_socket import BTCPClientSocket
 from btcp.server_socket import BTCPServerSocket
+import os
+import filecmp
+
 
 
 timeout=100
@@ -62,7 +65,7 @@ class TestbTCPFramework(unittest.TestCase):
         
         # launch localhost server
 
-        self.server = BTCPServerSocket(winsize, timeout)
+        server_app.main()
 
     def tearDown(self):
         """Clean up after testing"""
@@ -76,14 +79,17 @@ class TestbTCPFramework(unittest.TestCase):
         # setup environment (nothing to set)
 
         # launch localhost client connecting to server
-        client = BTCPClientSocket(winsize, timeout)
+
+        client_app.main()
+
 
         # client sends content to server
-        
+        if os.path.isfile("input.file") and os.path.isfile("output.file"):
+            self.assertTrue(filecmp.cmp("input.file", "output.file"))
         # server receives content from client
-        
+
         # content received by server matches the content sent by client
-    
+
     def test_flipping_network(self):
         """reliability over network with bit flips 
         (which sometimes results in lower layer packet loss)"""
