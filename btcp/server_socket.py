@@ -33,6 +33,7 @@ class BTCPServerSocket(BTCPSocket):
     # Wait for the client to initiate a three-way handshake
     def accept(self):
         self._ReceivedPacket = None
+        print("test")
         while not self._HandshakeSuccessful:
             if self.wait_for_packet():
                 if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 4:

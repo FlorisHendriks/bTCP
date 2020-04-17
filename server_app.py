@@ -2,7 +2,6 @@
 
 import argparse
 from btcp.server_socket import BTCPServerSocket
-import time
 
 def main():
     parser = argparse.ArgumentParser()
@@ -10,10 +9,11 @@ def main():
     parser.add_argument("-t", "--timeout", help="Define bTCP timeout in milliseconds", type=int, default=100)
     parser.add_argument("-o", "--output", help="Where to store the file", default="output.file")
     args = parser.parse_args()
-
+    print("yeet")
     # Create a bTCP server socket
     s = BTCPServerSocket(args.window, args.timeout)
     s.accept()
+    print("accepted")
     # TODO Write your file transfer server code here using your BTCPServerSocket's accept, and recv methods.
     s.recv()
     s.packet_to_file(args.output)

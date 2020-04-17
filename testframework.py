@@ -65,7 +65,7 @@ class TestbTCPFramework(unittest.TestCase):
         
         # launch localhost server
 
-        server_app.main()
+
 
     def tearDown(self):
         """Clean up after testing"""
@@ -79,8 +79,8 @@ class TestbTCPFramework(unittest.TestCase):
         # setup environment (nothing to set)
 
         # launch localhost client connecting to server
-
-        client_app.main()
+        run_command(server_app.main())
+        run_command(client_app.main())
 
 
         # client sends content to server
