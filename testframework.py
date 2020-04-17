@@ -5,8 +5,9 @@ import sys
 import threading
 from btcp.packet import *
 from btcp.btcp_socket import *
-import client_app
 import server_app
+import client_app
+
 from btcp.client_socket import BTCPClientSocket
 from btcp.server_socket import BTCPServerSocket
 import os
@@ -79,7 +80,9 @@ class TestbTCPFramework(unittest.TestCase):
         # setup environment (nothing to set)
 
         # launch localhost client connecting to server
+
         run_command(server_app.main())
+
         run_command(client_app.main())
 
 

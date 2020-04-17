@@ -21,4 +21,5 @@ def main():
     # Clean up any state
     s.close()
 
-main()
+if __name__ == "__main__":
+    main()
