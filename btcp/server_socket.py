@@ -102,8 +102,8 @@ class BTCPServerSocket(BTCPSocket):
                             print(Ack_packet_bytes)
                             print(Packet.unpack_packet(Ack_packet_bytes))
                             self._Disconnected = True
-                            print("Disconnection succesful")
-                            #self._lossy_layer.destroy()
+                            print("Disconnection successful")
+                            self._lossy_layer.destroy()
 
 
     def packet_to_file(self, file):

@@ -136,8 +136,8 @@ class BTCPClientSocket(BTCPSocket):
                             Ack_packet_bytes = Ack_packet.pack_packet()
                             self._lossy_layer.send_segment(Ack_packet_bytes)
                             self._Disconnected = True
-                            print("disconnection succesful")
-
+                            print("disconnection successful")
+                            self._lossy_layer.destroy()
                         else:
                             print("MonkaS")
             except socket.timeout:

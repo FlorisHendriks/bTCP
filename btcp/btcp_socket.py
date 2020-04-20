@@ -21,7 +21,7 @@ class BTCPSocket:
             checksum = (temp & 0xffff) + (temp >> 16)
 
         checksum = ~checksum & 0xffff
-        print("{0:016b}".format(checksum))
+        print("checksum: "+"{0:016b}".format(checksum))
         return checksum
 
     def CheckChecksum(packet):
