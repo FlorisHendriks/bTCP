@@ -14,7 +14,7 @@ class Header:
         return struct.pack('HHBBHH', self._Syn_number, self._Ack_number, self._Flags.flag_to_int(), self._Window, self._Data_length, self._Checksum)
 
     def unpack_header(packed_header):
-        print(packed_header)
+        #print(packed_header)
         Syn_number, Ack_number, FlagInt, Window, Data_length, Checksum = struct.unpack('HHBBHH', packed_header)
         Flag = Flags.int_to_flag(FlagInt)
         return Header(Syn_number, Ack_number, Flag, Window, Data_length, Checksum)
@@ -61,7 +61,7 @@ class Packet:
         self._header.changeDataLength(len(self._payload))
         packet_bytes = self._header.pack_header() + self._payload + self._padding
         checksum = BTCPSocket.in_cksum(packet_bytes)
-        print(checksum)
+        #print(checksum)
         self._header.changeChecksum(checksum)
         return self._header.pack_header() + self._payload + self._padding
 

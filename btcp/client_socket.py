@@ -29,6 +29,7 @@ class BTCPClientSocket(BTCPSocket):
         self._First_Packet_Sequence_Number = 0
         self._ReceivedAckPackets = []
 
+
     # Called by the lossy layer from another thread whenever a segment arrives. 
     def lossy_layer_input(self, segment):
         packet_bytes, address = segment
@@ -56,6 +57,7 @@ class BTCPClientSocket(BTCPSocket):
                         Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
                         Ack_packet = Packet(Ack_header, "ack")
                         Ack_packetBytes = Ack_packet.pack_packet()
+                        print(Ack_packet.getHeader().getFlags().flag_to_int())
                         self._lossy_layer.send_segment(Ack_packetBytes)
                         self._HandshakeSuccessful = True
                         print("handshake succesful")
@@ -83,10 +85,12 @@ class BTCPClientSocket(BTCPSocket):
 
     # Send data originating from the application in a reliable way to the server
     def send(self, data):
-        print(type(data))
-        print("datatest")
+        #print(type(data))
+        #print(data)
         packets = []
         content = open(data).read()
+        #print(content)
+        #print(self._First_Packet_Sequence_Number)
         sequence_number_updated = self._First_Packet_Sequence_Number
         while len(content) > 0:
             if len(content) >= 1008:
@@ -106,8 +110,10 @@ class BTCPClientSocket(BTCPSocket):
 
         for i in range (0, len(packets)):
             self._lossy_layer.send_segment(packets[i])
+            print(packets[i])
 
         while not Packet.unpack_packet(self._ReceivedPacket).getHeader().getAckNumber() == sequence_number_updated:
+            print("test")
             time.sleep(0.1)
 
         pass
