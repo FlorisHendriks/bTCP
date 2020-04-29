@@ -17,80 +17,70 @@ class BTCPClientSocket(BTCPSocket):
         super().__init__(window, timeout)
         self._lossy_layer = LossyLayer(self, CLIENT_IP, CLIENT_PORT, SERVER_IP, SERVER_PORT)
         self._btcpsocket = BTCPSocket
-        #self._tcp_sock = socket.socket(socket.AF_INET,
-                                       #socket.SOCK_DGRAM)  # We use the underscore to hint that the variable is used for internal use
-        #self._tcp_sock.bind((CLIENT_IP, CLIENT_PORT))
-        #self._tcp_sock.settimeout(timeout)
-        #self._server_address = (SERVER_IP, SERVER_PORT)
         self._HandshakeSuccessful = False
         self._Disconnected = False
-        self._ReceivedPacket = None
         self._timeout = timeout
         self._First_Packet_Sequence_Number = 0
-        self._ReceivedAckPackets = []
+        self._PacketList = []
+        self._AckPacket = None
 
 
     # Called by the lossy layer from another thread whenever a segment arrives. 
     def lossy_layer_input(self, segment):
         packet_bytes, address = segment
-        self._ReceivedAckPackets.append(packet_bytes)
-        self._ReceivedPacket = packet_bytes
+        print(packet_bytes)
+        self._PacketList.append(packet_bytes)
 
     # Perform a three-way handshake to establish a connection
     def connect(self):
+        print("Trying handshake")
         while not self._HandshakeSuccessful:
-            self._ReceivedPacket = None
+            self._PacketList = []
             try:
                 header = Header(random.getrandbits(15) & 0xffff, 0, Flags(1,0,0), self._window, 0, 0) #We use 15 bits instead of 16 because there are cases that random.getrandbits() returns a large integer that will overflow the 16 bit length when we add sequence numbers to it and eventually results in an error (struct.error: ushort format requires 0 <= number <= 0xffff)
                 Syn_packet = Packet(header, "syn")
                 Syn_packet_bytes = Syn_packet.pack_packet()
-                print(str(Syn_packet))
                 self._lossy_layer.send_segment(Syn_packet_bytes)
                 if self.wait_for_packet():
-                    Syn_Ack_Packet_bytes = self._ReceivedPacket
+                    Syn_Ack_Packet_bytes = self._PacketList[0]
                     Syn_Ack_Packet = Packet.unpack_packet(Syn_Ack_Packet_bytes)
+                    print("Syn-Ack:")
                     print(Syn_Ack_Packet)
                     self._First_Packet_Sequence_Number = Syn_Ack_Packet.getHeader().getAckNumber() + 1
                     Ack_number = Syn_Ack_Packet.getHeader().getSynNumber() + 1
                     if self._btcpsocket.CheckChecksum(Syn_Ack_Packet_bytes):
-                        print("test")
+                        #print("Checksum of the syn-ack packet is correct")
                         Ack_header = Header(0, Ack_number, Flags(0, 1, 0), self._window, 0, 0)
                         Ack_packet = Packet(Ack_header, "ack")
+                        self._AckPacket = Ack_packet
                         Ack_packetBytes = Ack_packet.pack_packet()
-                        print(Ack_packet.getHeader().getFlags().flag_to_int())
+                        print(Ack_packet)
                         self._lossy_layer.send_segment(Ack_packetBytes)
                         self._HandshakeSuccessful = True
-                        print("handshake succesful")
+                        print("handshake successful")
+                        self._PacketList = []
                     else:
-                        print("Retry Handshake")
+                        print("Retrying handshake, the checksum of the syn-ack packet is invalid")
+
+                else:
+                    print("Retrying handshake, packet timeout")
             except socket.timeout:
                 print("socket timeout")
                 pass
 
-    def flags_to_int(self, syn, ack, fin):
-        flagBitstring = "{0:0b}".format(syn)
-        flagBitstring += "{0:0b}".format(ack)
-        flagBitstring += "{0:0b}".format(fin)
-
-        return int(flagBitstring, 2)
-
     def wait_for_packet(self):
         timeNow = time.time()
-        while self._ReceivedPacket is None and time.time() < timeNow + self._timeout * 0.001:
+        while self._PacketList == [] and time.time() < timeNow + self._timeout * 0.001:
             time.sleep(0.001)
-        if self._ReceivedPacket is None:
+        if not self._PacketList:
             return False
         else:
             return True
 
     # Send data originating from the application in a reliable way to the server
     def send(self, data):
-        #print(type(data))
-        #print(data)
         packets = []
         content = open(data).read()
-        #print(content)
-        #print(self._First_Packet_Sequence_Number)
         sequence_number_updated = self._First_Packet_Sequence_Number
         while len(content) > 0:
             if len(content) >= 1008:
@@ -108,30 +98,61 @@ class BTCPClientSocket(BTCPSocket):
                 sequence_number_updated += len(content)
                 content = ""
 
-        for i in range (0, len(packets)):
-            self._lossy_layer.send_segment(packets[i])
-            print(packets[i])
+        if len(packets) <= self._window:
+            for i in range (0, len(packets)):
+                self.ResubmitPacket(packets[0])
+                packets.pop(0)
 
-        while not Packet.unpack_packet(self._ReceivedPacket).getHeader().getAckNumber() == sequence_number_updated:
-            print("test")
+        else:
+            x = len(packets)
+            while x > self._window:
+                x = x - self._window
+                for j in range (0, self._window):
+                    self.ResubmitPacket(packets[0])
+                    packets.pop(0)
+            for m in range(0, x):
+                self.ResubmitPacket(packets[0])
+                packets.pop(0)
+        while not Packet.unpack_packet(self._PacketList[len(self._PacketList)-1]).getHeader().getAckNumber() == sequence_number_updated:
             time.sleep(0.1)
 
         pass
 
+    def ResubmitPacket(self, packetbytes):
+        self._PacketList = []
+        self._lossy_layer.send_segment(packetbytes)
+        self.wait_for_packet()
+        packet = Packet.unpack_packet(packetbytes)
+        while not self.CheckIfAckPacketAndCorrectNumber(packet.getHeader().getSynNumber() + packet.getHeader().getDatalength()):
+            self._lossy_layer.send_segment(packetbytes)
+            self._PacketList.pop(0)
+            self.wait_for_packet()
+
+
+    def CheckIfAckPacketAndCorrectNumber(self, SynNumber):
+        print("flag number:" + str(Packet.unpack_packet(self._PacketList[0]).getHeader().getFlags().flag_to_int()))
+        print("Syn number:" + str(SynNumber))
+        print("Ack number:" + str(Packet.unpack_packet(self._PacketList[0]).getHeader().getAckNumber()))
+        if Packet.unpack_packet(self._PacketList[0]).getHeader().getFlags().flag_to_int() == 2 and Packet.unpack_packet(self._PacketList[0]).getHeader().getAckNumber() == SynNumber:
+            return True
+        print("hallo waarom is het fout?")
+        return False
+
     # Perform a handshake to terminate a connection
     def disconnect(self):
-        self._ReceivedPacket = None
         while not self._Disconnected:
+            self._PacketList = []
             try:
                 print("Trying to disconnect:" + "\n")
                 header = Header(random.getrandbits(15) & 0xffff, 0, Flags(0,0,1), self._window, 0, 0) #We use 15 bits instead of 16 because there are cases that random.getrandbits() returns a large integer that will overflow the 16 bit length when we add sequence numbers to it and eventually results in an error (struct.error: ushort format requires 0 <= number <= 0xffff)
                 Fin_packet = Packet(header, "fin")
                 Fin_packet_bytes = Fin_packet.pack_packet()
-                print(str(Fin_packet))
+                #print(str(Fin_packet))
                 self._lossy_layer.send_segment(Fin_packet_bytes)
                 if self.wait_for_packet():
-                    if Packet.unpack_packet(self._ReceivedPacket).getHeader().getFlags().flag_to_int() == 3:
-                        Fin_Ack_Packet_bytes = self._ReceivedPacket
+                    if Packet.unpack_packet(self._PacketList[0]).getHeader().getFlags().flag_to_int() == 3:
+                        Fin_Ack_Packet_bytes = self._PacketList[0]
+                        self._PacketList.pop(0)
                         Fin_Ack_Packet = Packet.unpack_packet(Fin_Ack_Packet_bytes)
                         print(Fin_Ack_Packet)
                         Ack_number = Fin_Ack_Packet.getHeader().getSynNumber() + 1
@@ -143,7 +164,6 @@ class BTCPClientSocket(BTCPSocket):
                             self._lossy_layer.send_segment(Ack_packet_bytes)
                             self._Disconnected = True
                             print("disconnection successful")
-                            self._lossy_layer.destroy()
                         else:
                             print("MonkaS")
             except socket.timeout:
@@ -152,5 +172,5 @@ class BTCPClientSocket(BTCPSocket):
 
     # Clean up any state
     def close(self):
-        #self._lossy_layer.destroy()
+        self._lossy_layer.destroy()
         pass

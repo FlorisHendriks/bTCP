@@ -7,7 +7,8 @@ from btcp.packet import *
 from btcp.btcp_socket import *
 import server_app
 import client_app
-
+import btcp.server_socket
+import argparse
 from btcp.client_socket import BTCPClientSocket
 from btcp.server_socket import BTCPServerSocket
 import os
@@ -66,6 +67,8 @@ class TestbTCPFramework(unittest.TestCase):
         
         # launch localhost server
 
+        # Create a bTCP server socket
+        server_app.main()
 
 
     def tearDown(self):
@@ -74,16 +77,18 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_del)
         
         # close server
-
+        self.server.close()
     def test_ideal_network(self):
         """reliability over an ideal framework"""
         # setup environment (nothing to set)
 
         # launch localhost client connecting to server
 
-        run_command(server_app.main())
-
-        run_command(client_app.main())
+        client = BTCPClientSocket(100,1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
 
 
         # client sends content to server
@@ -100,9 +105,15 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_change.format("corrupt 1%"))
         
         # launch localhost client connecting to server
-        
+
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # client sends content to server
-        
+        self.assertTrue(True)
+
         # server receives content from client
         
         # content received by server matches the content sent by client
@@ -113,9 +124,13 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_change.format("duplicate 10%"))
         
         # launch localhost client connecting to server
-        
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # client sends content to server
-        
+        self.assertTrue(True)
         # server receives content from client
         
         # content received by server matches the content sent by client
@@ -126,9 +141,14 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_change.format("loss 10% 25%"))
         
         # launch localhost client connecting to server
-        
+
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # client sends content to server
-        
+        self.assertTrue(True)
         # server receives content from client
         
         # content received by server matches the content sent by client
@@ -140,11 +160,16 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_change.format("delay 20ms reorder 25% 50%"))
         
         # launch localhost client connecting to server
-        
+
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # client sends content to server
         
         # server receives content from client
-        
+        self.assertTrue(True)
         # content received by server matches the content sent by client
         
     def test_delayed_network(self):
@@ -153,11 +178,16 @@ class TestbTCPFramework(unittest.TestCase):
         run_command(netem_change.format("delay "+str(timeout)+"ms 20ms"))
         
         # launch localhost client connecting to server
-        
+
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # client sends content to server
         
         # server receives content from client
-        
+        self.assertTrue(True)
         # content received by server matches the content sent by client
     
     def test_allbad_network(self):
@@ -169,9 +199,14 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
         
         # client sends content to server
-        
+
+        client = BTCPClientSocket(100, 1000)
+        client.connect()
+        client.send()
+        client.disconnect()
+        client.close()
         # server receives content from client
-        
+        self.assertTrue(True)
         # content received by server matches the content sent by client   
 
   
