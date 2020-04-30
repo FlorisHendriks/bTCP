@@ -17,6 +17,7 @@ class BTCPServerSocket(BTCPSocket):
         self._PacketList = []
         self._OutputList = []
         self._PacketCounter = 0
+        self._AckNumber = 0
 
 
     # Called by the lossy layer from another thread whenever a segment arrives
@@ -40,14 +41,15 @@ class BTCPServerSocket(BTCPSocket):
             print("Syn Packet:")
             print(Syn_packet)
             if Syn_packet.getHeader().getFlags().flag_to_int() == 4 and self._btcpsocket.CheckChecksum(Syn_packet_bytes):
-                self._PacketList = []
+                #self._PacketList = []
                 flags = Flags(1,1,0)
                 print(Syn_packet_bytes)
                 print(Syn_packet.getHeader().getSynNumber())
                 ack_number = Syn_packet.getHeader().getSynNumber() + 1
                 header = Header(random.getrandbits(15) & 0xffff, ack_number, flags, self._window, 0, 0)
-                Syn_Ack_packet = Packet(header, "syn_ack")
+                Syn_Ack_packet = Packet(header, "")
                 Syn_Ack_packet_bytes = Syn_Ack_packet.pack_packet()
+                self._AckNumber = ack_number
                 self._lossy_layer.send_segment(Syn_Ack_packet_bytes)
                 self.wait_for_packet()
                 Ack_packet_bytes = self._PacketList[0]
@@ -57,11 +59,22 @@ class BTCPServerSocket(BTCPSocket):
                 if Ack_packet.getHeader().getFlags().flag_to_int() == 2:
                     if self._btcpsocket.CheckChecksum(Ack_packet_bytes):
                             self._HandshakeSuccessful = True
-                            print("Handshake successful")
+                            print("Server handshake successful")
                     else:
                         print("Ack packet checksum incorrect")
                 else:
-                    print("Flags incorrect")
+                    print("hallo2")
+                    while not self._HandshakeSuccessful:
+                        self._lossy_layer.send_segment(Syn_Ack_packet_bytes)
+                        self.wait_for_packet()
+                        packet = Packet.unpack_packet(self._PacketList[0])
+                        self._PacketList.pop(0)
+                        print("hallo")
+                        print(packet)
+                        if packet.getHeader().getFlags().flag_to_int() == 2:
+                            if self._btcpsocket.CheckChecksum(packet.pack_packet()):
+                                self._HandshakeSuccessful = True
+                                print("Server handshake successful")
             else:
                 print("packet timeout")
 
@@ -75,16 +88,24 @@ class BTCPServerSocket(BTCPSocket):
         print(self._PacketList[0])
         while not Packet.unpack_packet(self._PacketList[0]).getHeader().getFlags().flag_to_int() == 1:
             packet = Packet.unpack_packet(self._PacketList[0])
-            Ack_number = packet.getHeader().getSynNumber() + packet.getHeader().getDatalength()
-            header = Header(0, Ack_number, Flags(0,1,0), self._window, 0, 0)
-            AckPacket = Packet(header, "")
-            AckPacket_bytes = AckPacket.pack_packet()
-            self._lossy_layer.send_segment(AckPacket_bytes)
-            print("test")
-            self._OutputList.append(self._PacketList[0])
-            self._PacketList.pop(0)
-            self.wait_for_packet()
-
+            if packet.getHeader().getSynNumber() == self._AckNumber:
+                self._AckNumber += packet.getHeader().getDatalength()
+                header = Header(0, self._AckNumber, Flags(0,1,0), self._window, 0, 0)
+                AckPacket = Packet(header, "")
+                AckPacket_bytes = AckPacket.pack_packet()
+                self._lossy_layer.send_segment(AckPacket_bytes)
+                self._OutputList.append(self._PacketList[0])
+                self._PacketList.pop(0)
+                self.wait_for_packet()
+            else:
+                header = Header(0, self._AckNumber, Flags(0, 1, 0), self._window, 0, 0)
+                AckPacket = Packet(header, "")
+                AckPacket_bytes = AckPacket.pack_packet()
+                self._lossy_layer.send_segment(AckPacket_bytes)
+                self._PacketList.pop(0)
+                self.wait_for_packet()
+            print("server acknumber:")
+            print(self._AckNumber)
     # Clean up any state
     def disconnect(self):
         print("Trying to disconnect:")
@@ -108,15 +129,20 @@ class BTCPServerSocket(BTCPSocket):
                     print(Ack_packet_bytes)
                     print(Packet.unpack_packet(Ack_packet_bytes))
                     self._Disconnected = True
-                    print("Disconnection successful")
+                    print("Server disconnection successful")
 
     def packet_to_file(self, file):
         content = ""
+        print("hallo3")
+        print(len(self._OutputList))
         for i in range(0, len(self._OutputList)):
             content += Packet.unpack_packet(self._OutputList[i]).getPayload().decode()
 
         f = open(file, 'w')
         f.write(content)
+        f.flush()
+        f.close()
+
 
     def close(self):
         self._lossy_layer.destroy()

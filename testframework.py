@@ -16,7 +16,7 @@ import filecmp
 
 
 
-timeout=100
+timeout=1000
 winsize=100
 intf="lo"
 netem_add="sudo tc qdisc add dev {} root netem".format(intf)
