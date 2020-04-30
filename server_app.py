@@ -3,7 +3,7 @@
 import argparse
 from btcp.server_socket import BTCPServerSocket
 import threading
-
+import os
 
 class TCPClient(threading.Thread):
 
@@ -26,3 +26,8 @@ class TCPClient(threading.Thread):
         s.disconnect()
         # Clean up any state
         s.close()
+
+    @staticmethod
+    def remove_file(outputfile):
+        if os.path.isfile(outputfile):
+            os.remove(outputfile)

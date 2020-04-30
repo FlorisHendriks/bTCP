@@ -63,14 +63,17 @@ class TestbTCPFramework(unittest.TestCase):
     def setUp(self):
         """Prepare for testing"""
         # default netem rule (does nothing)
+        self.outputfile = "output.file"
+        self.inputfile = "input.file"
+
         run_command(netem_add)
         
         # launch localhost server
 
         # Create a bTCP server socket
         self.server = server_app.TCPClient()
+        self.server.remove_file(self.outputfile)
         self.server.start()
-        print("test")
 
     def tearDown(self):
         """Clean up after testing"""
@@ -88,8 +91,8 @@ class TestbTCPFramework(unittest.TestCase):
 
 
         # client sends content to server
-        if os.path.isfile("input.file") and os.path.isfile("output.file"):
-            self.assertTrue(filecmp.cmp("input.file", "output.file"))
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # server receives content from client
 
         # content received by server matches the content sent by client
@@ -104,7 +107,8 @@ class TestbTCPFramework(unittest.TestCase):
 
         client_app.main()
         # client sends content to server
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
 
         # server receives content from client
         
@@ -118,7 +122,8 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
         client_app.main()
         # client sends content to server
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # server receives content from client
         
         # content received by server matches the content sent by client
@@ -132,7 +137,8 @@ class TestbTCPFramework(unittest.TestCase):
 
         client_app.main()
         # client sends content to server
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # server receives content from client
         
         # content received by server matches the content sent by client
@@ -149,7 +155,8 @@ class TestbTCPFramework(unittest.TestCase):
         # client sends content to server
         
         # server receives content from client
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # content received by server matches the content sent by client
         
     def test_delayed_network(self):
@@ -163,7 +170,8 @@ class TestbTCPFramework(unittest.TestCase):
         # client sends content to server
         
         # server receives content from client
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # content received by server matches the content sent by client
     
     def test_allbad_network(self):
@@ -178,7 +186,8 @@ class TestbTCPFramework(unittest.TestCase):
 
         client_app.main()
         # server receives content from client
-        self.assertTrue(True)
+        if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
+            self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # content received by server matches the content sent by client   
 
   
