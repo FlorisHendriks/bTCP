@@ -103,11 +103,10 @@ class BTCPClientSocket(BTCPSocket):
                 self._SequenceNumberList.append(sequence_number_updated)
                 sequence_number_updated += len(content)
                 content = ""
-        self._packets1 = packets
+
         if len(packets) <= self._window:
             for i in range (0, len(packets)):
-                self.ResubmitPacket(packets[0])
-                packets.pop(0)
+                self.ResubmitPacket(packets[i])
 
         else:
             x = len(packets)
@@ -137,10 +136,10 @@ class BTCPClientSocket(BTCPSocket):
                 while not self.wait_for_packet():
                     self._lossy_layer.send_segment(self._AckPacket.pack_packet())
             else:
-                self._lossy_layer.send_segment(self._packets1[self._Packetloss])
+                self._lossy_layer.send_segment(packetbytes)
                 self._PacketList = []
                 while not self.wait_for_packet():
-                    self._lossy_layer.send_segment(self._packets1[self._Packetloss])
+                    self._lossy_layer.send_segment(packetbytes)
 
 
     def CheckIfAckPacketAndCorrectNumber(self, SynNumber):
