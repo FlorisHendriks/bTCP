@@ -71,7 +71,7 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost server
 
         # Create a bTCP server socket
-        self.server = server_app.TCPClient()
+        self.server = server_app.TCPServer()
         self.server.remove_file(self.outputfile)
         self.server.start()
 

@@ -4,16 +4,7 @@ import argparse
 import threading
 from btcp.client_socket import BTCPClientSocket
 
-class TCPServer(threading.Thread):
-    def run(self):
-        s = BTCPClientSocket(100, 500)
 
-        # TODO Write your file transfer clientcode using your implementation of BTCPClientSocket's connect, send, and disconnect methods.
-        s.connect()
-        s.send("input.file")
-        s.disconnect()
-        # Clean up any state
-        s.close()
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-w", "--window", help="Define bTCP window size", type=int, default=100)
@@ -32,5 +23,4 @@ def main():
     s.close()
 
 if __name__ == "__main__":
-    server = TCPServer()
-    server.start()
+    main()
