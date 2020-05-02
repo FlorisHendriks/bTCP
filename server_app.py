@@ -20,10 +20,11 @@ class TCPServer(threading.Thread):
 
         # Create a bTCP server socket
         s = BTCPServerSocket(args.window, args.timeout)
+
         s.accept()
-        # TODO Write your file transfer server code here using your BTCPServerSocket's accept, and recv methods.
         s.recv()
         s.packet_to_file(args.output)
+
         s.disconnect()
         # Clean up any state
         s.close()

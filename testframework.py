@@ -1,16 +1,8 @@
 import unittest
-import socket
 import time
 import sys
-import threading
-from btcp.packet import *
-from btcp.btcp_socket import *
 import server_app
 import client_app
-import btcp.server_socket
-import argparse
-from btcp.client_socket import BTCPClientSocket
-from btcp.server_socket import BTCPServerSocket
 import os
 import filecmp
 
@@ -88,7 +80,7 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
 
         client_app.main()
-
+        time.sleep(1)
 
         # client sends content to server
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
@@ -106,6 +98,7 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
 
         client_app.main()
+        time.sleep(1)
         # client sends content to server
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
             self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
@@ -121,6 +114,7 @@ class TestbTCPFramework(unittest.TestCase):
         
         # launch localhost client connecting to server
         client_app.main()
+        time.sleep(1)
         # client sends content to server
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
             self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
@@ -136,6 +130,7 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
 
         client_app.main()
+        time.sleep(1)
         # client sends content to server
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
             self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
@@ -152,13 +147,14 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
 
         client_app.main()
+        time.sleep(1)
         # client sends content to server
         
         # server receives content from client
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
             self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
         # content received by server matches the content sent by client
-        
+        print("hallo")
     def test_delayed_network(self):
         """reliability over network with delay relative to the timeout value"""
         # setup environment
@@ -167,6 +163,7 @@ class TestbTCPFramework(unittest.TestCase):
         # launch localhost client connecting to server
 
         client_app.main()
+        time.sleep(1)
         # client sends content to server
         
         # server receives content from client
@@ -185,6 +182,7 @@ class TestbTCPFramework(unittest.TestCase):
         # client sends content to server
 
         client_app.main()
+        time.sleep(1)
         # server receives content from client
         if os.path.isfile(self.inputfile) and os.path.isfile(self.outputfile):
             self.assertTrue(filecmp.cmp(self.inputfile, self.outputfile))
